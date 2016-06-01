@@ -1,0 +1,27 @@
+{
+  "name": "yikun",
+  "version": "1.0.0",
+  "description": "Command line tool for controlling a Xiaomi Yi camera",
+  "author": "Johan Nordberg <code@johan-nordberg.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnordberg/yikun.git"
+  },
+  "bin": {
+    "yikun": "./bin/yikun"
+  },
+  "scripts": {
+    "prepublish": "coffee -c -b -o lib src"
+  },
+  "dependencies": {
+    "async": "^2.0.0-rc.5",
+    "commander": "^2.9.0",
+    "fecha": "^2.1.0",
+    "printf": "^0.2.3",
+    "yichan": "^1.2.0"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.10.0"
+  }
+}

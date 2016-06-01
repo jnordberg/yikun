@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+if (process.env['YIKUN_DEV']) {
+  require('coffee-script/register')
+  require('./../src/main.coffee')
+} else {
+  require('./../lib/main.js')
+}
