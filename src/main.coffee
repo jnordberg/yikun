@@ -58,6 +58,17 @@ program
   .action -> action = -> batteryStatus completeHandler
 
 program
+  .command 'clock [date]'
+  .description 'view or set the camera clock'
+  .option '-s, --system', 'set camera clock from system time'
+  .action (date, options) -> action = -> clockAction date, options, completeHandler
+
+program
+  .command 'cmd <json>'
+  .description 'send arbitrary command'
+  .action (json) -> action = -> sendCommand json, completeHandler
+
+program
   .command 'reboot'
   .description 'reboot the camera'
   .action -> action = -> rebootCamera completeHandler
@@ -149,11 +160,45 @@ readFile = (cameraPath, options, callback) ->
 rebootCamera = (callback) ->
   camera.sendCmd {msg_id: 2, type: 'dev_reboot', param: 'on'}, -> do callback
 
+sendCommand = (json, callback) ->
+  try
+    cmd = JSON.parse json
+  catch error
+    error.message = "Unable to parse '#{ json }' (#{ error.message })"
+    callback error
+    return
+  logDebug 'sending', cmd
+  camera.sendCmd cmd, (error, result) ->
+    unless error?
+      log result
+    callback error
+
 batteryStatus = (callback) ->
   camera.sendCmd {msg_id: 13}, (error, result) ->
     unless error?
       process.stdout.write "source #{ result.type }\n level #{ result.param }%\n"
     callback error
+
+clockAction = (date, options, callback) ->
+  clockFmt = 'YYYY-MM-DD HH:mm:ss'
+  if date?
+    parsed = fecha.parse date, clockFmt
+    if parsed is false
+      callback new Error "Invalid date: '#{ date }', format should be #{ clockFmt }"
+      return
+    date = parsed
+  else if options.system
+    date = new Date
+
+  if date?
+    cameraDate = fecha.format date, clockFmt
+    logDebug 'setting clock to', cameraDate
+    camera.sendCmd {msg_id: 2, type: 'camera_clock', param: cameraDate}, callback
+  else
+    camera.sendCmd {msg_id: 9, param: 'camera_clock'}, (error, result) ->
+      unless error?
+        log result.options[0]
+      callback error
 
 capturePhoto = (options, callback) ->
   logDebug 'triggering shutter'
