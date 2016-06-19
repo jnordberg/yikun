@@ -65,8 +65,15 @@ program
 
 program
   .command 'cmd <json>'
-  .description 'send arbitrary command'
+  .description 'send json command'
   .action (json) -> action = -> sendCommand json, completeHandler
+
+program
+  .command 'exec <command>'
+  .description 'execute command in ambarella shell'
+  .action ->
+    command = process.argv[3..].join ' '
+    action = -> execCommand command, completeHandler
 
 program
   .command 'reboot'
@@ -229,6 +236,12 @@ capturePhoto = (options, callback) ->
           logDebug 'removing', filename
           camera.deleteFile filename, callback
       async.series tasks, callback
+
+execCommand = (command, callback) ->
+  camera.execCommand command, (error, result) ->
+    unless error?
+      process.stdout.write result
+    callback error
 
 program.parse process.argv
 
