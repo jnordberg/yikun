@@ -69,11 +69,16 @@ program
   .action (json) -> action = -> sendCommand json, completeHandler
 
 program
-  .command 'exec <command>'
+  .command 'exec [command]'
   .description 'execute command in ambarella shell'
-  .action ->
-    command = process.argv[3..].join ' '
-    action = -> execCommand command, completeHandler
+  .action (command) -> action = ->
+    unless command?
+      command = ''
+      process.stdin.on 'data', (chunk) -> command += chunk
+      process.stdin.on 'end', ->
+        execCommand command, completeHandler
+    else
+      execCommand command, completeHandler
 
 program
   .command 'reboot'
