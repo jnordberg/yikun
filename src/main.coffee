@@ -6,9 +6,9 @@ fs = require 'fs'
 path = require 'path'
 printf = require 'printf'
 util = require 'util'
-yichan = require 'yichan'
-
+yichan = require if process.env['YIKUN_DEV']? then 'yichan/src' else 'yichan'
 program = require 'commander'
+chalk = require 'chalk'
 
 pkg = require './../package.json'
 
@@ -79,6 +79,43 @@ program
         execCommand command, completeHandler
     else
       execCommand command, completeHandler
+
+program
+  .command 'config [name] [value]'
+  .description 'read or write camera config'
+  .action (name, value) ->
+    if name? and value?
+      action = -> writeSetting name, value, completeHandler
+    else if name?
+      action = -> getSetting name, completeHandler
+    else
+      action = -> showSettings completeHandler
+
+writeSetting = (name, value, callback) ->
+  camera.writeSetting name, value, completeHandler
+
+getSetting = (name, callback) ->
+  camera.getSetting name, (error, result) ->
+    unless error?
+      process.stdout.write result.param + '\n'
+    callback error
+
+showSettings = (callback) ->
+  list = (data, callback) ->
+    {current, available} = data
+    for key, value of current
+      opts = available[key]
+      col = if opts.permission is 'settable' then chalk.green else chalk.red
+      process.stdout.write "#{ key } = #{ col value }"
+      if opts.permission is 'settable'
+        process.stdout.write chalk.grey " (#{ opts.options.join ', ' })"
+      process.stdout.write '\n'
+    callback()
+  async.auto
+    available: (callback) -> camera.getAvailableSettings callback
+    current: (callback) -> camera.getSettings callback
+    list: ['available', 'current', list]
+  , callback
 
 program
   .command 'reboot'
