@@ -16,6 +16,9 @@ action = null
 
 defaultCameraAddress = process.env['YI_CAMERA_ADDR'] ? '192.168.42.1'
 
+resolveCameraPath = (cameraPath) ->
+  if cameraPath[0] isnt '/' then (path.join '/tmp/fuse_d/', cameraPath) else cameraPath
+
 program
   .version pkg.version
   .option '-v, --verbose', 'enable verbose logging'
@@ -34,23 +37,23 @@ program
   .description 'upload a file to the camera'
   .option '-i, --input <file>', 'input file, defaults to stdin'
   .option '-X, --overwrite', 'whether to overwrite existing file, unsafe'
-  .action (cameraPath, options) -> action = -> putFile cameraPath, options, completeHandler
+  .action (cameraPath, options) -> action = -> putFile (resolveCameraPath cameraPath), options, completeHandler
 
 program
   .command 'cat <camera_path>'
   .description 'read a file from camera'
   .option '-o, --output <file>', 'output file, defaults to stdout'
-  .action (cameraPath, options) -> action = -> readFile cameraPath, options, completeHandler
+  .action (cameraPath, options) -> action = -> readFile (resolveCameraPath cameraPath), options, completeHandler
 
 program
   .command 'rm <camera_path>'
   .description 'remove file from camera'
-  .action (cameraPath, options) -> action = -> removeFile cameraPath, options, completeHandler
+  .action (cameraPath, options) -> action = -> removeFile (resolveCameraPath cameraPath), options, completeHandler
 
 program
   .command 'ls <camera_path>'
   .description 'list directory on camera'
-  .action (cameraPath, options) -> action = -> listDirectory cameraPath, options, completeHandler
+  .action (cameraPath, options) -> action = -> listDirectory (resolveCameraPath cameraPath), options, completeHandler
 
 program
   .command 'battery'
